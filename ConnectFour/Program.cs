@@ -1,53 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Xml.Linq;
 
 namespace Connect_Four
 {
 
-    class ConnectFour
+
+    internal class Board
     {
-        static char[,] board;
-        static char currentPlayer;
-        static bool gameover;
+        public int Rows { get; set; }
+        public int Cols { get; set; }
+        public string[,] Table { get; set; }
 
-        static void Main()
+        public Board(int rows, int cols)
         {
-            InitializeBoard();
-            currentPlayer = 'X';
-            gameover = false;
-
-            while (!gameover)
-            {
-                PrintBoard();
-                Console.WriteLine("Player {0}, choose a column (1-7):", currentPlayer);
-                int column = int.Parse(Console.ReadLine()) - 1;
-                MakeMove(column);
-                CheckWinCondition();
-                SwitchPlayer();
-            }
+            Rows = rows;
+            Cols = cols;
+            Table = new string[Rows, Cols];
         }
 
-        static void InitializeBoard()
+        public Board()
         {
-            board = new char[6, 7];
-            for (int row = 0; row < 6; row++)
-            {
-                for (int col = 0; col < 7; col++)
-                {
-                    board[row, col] = ' ';
-                }
-            }
+            Rows = 6;
+            Cols = 7;
+            Table = new string[Rows, Cols];
         }
 
-        static void PrintBoard()
+
+        public void PrintBoard()
         {
             Console.Clear();
             Console.WriteLine("  1 2 3 4 5 6 7");
-            for (int row = 0; row < 6; row++)
+            for (int row = 0; row < Rows; row++)
             {
                 Console.Write("|");
-                for (int col = 0; col < 7; col++)
+                for (int col = 0; col < Cols; col++)
                 {
-                    Console.Write(board[row, col]);
+                    Console.Write(Table[row, col]);
                     Console.Write("|");
                 }
                 Console.WriteLine();
@@ -55,32 +45,94 @@ namespace Connect_Four
             Console.WriteLine("---------------");
         }
 
-        static void MakeMove(int column)
+
+        public void InitializeBoard()
         {
-            for (int row = 5; row >= 0; row--)
+            for (int row = 0; row < Rows; row++)
             {
-                if (board[row, column] == ' ')
+                for (int col = 0; col < Cols; col++)
                 {
-                    board[row, column] = currentPlayer;
-                    return;
+                    Table[row, col] = "#";
                 }
             }
         }
 
-        static void CheckWinCondition()
+
+        
+
+    }
+
+    internal class Player
+    {
+        public string Name { get; set; }
+        public string Symbol { get; set; }
+
+        public Player(string name, string symbol)
+        {
+            Name = name;
+            Symbol = symbol;
+        }
+
+
+        public void MakeMove(int column, Board board)
+        {
+            for (int row = board.Rows-1; row >= 0; row--)
+            {
+                if (board.Table[row, column] == "#")
+                {
+                    board.Table[row, column] = Symbol;
+                    return;
+                }
+            }
+        }
+    }
+
+    internal class Controler
+    {
+        public Board GameBoard { get; set; }
+        public List<Player> players { get; set; }
+
+        public bool gameover;
+
+
+        public Controler()
+        {
+            GameBoard = new Board();
+            players = new List<Player>(2);
+            gameover = false;
+
+            AskForPlayers();
+        }
+
+
+        public void AskForPlayers()
+        {
+            string name;
+            Console.WriteLine("Write player 1 name: ");
+            name = Console.ReadLine();
+            var newPlayer = new Player(name, "X");
+            players.Add(newPlayer);
+            Console.WriteLine("Write player 2 name: ");
+            name = Console.ReadLine();
+            newPlayer = new Player(name, "O");
+            players.Add(newPlayer);
+        }
+
+
+        public void CheckWinCondition(Player currentPlayer)
         {
             // Check horizontal
             for (int row = 0; row < 6; row++)
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    if (board[row, col] != ' ' &&
-                        board[row, col] == board[row, col + 1] &&
-                        board[row, col] == board[row, col + 2] &&
-                        board[row, col] == board[row, col + 3])
+                    if (GameBoard.Table[row, col] != "#" &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 1] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 2] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 3])
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer);
+                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
                         return;
                     }
                 }
@@ -91,13 +143,13 @@ namespace Connect_Four
             {
                 for (int col = 0; col < 7; col++)
                 {
-                    if (board[row, col] != ' ' &&
-                        board[row, col] == board[row + 1, col] &&
-                        board[row, col] == board[row + 2, col] &&
-                        board[row, col] == board[row + 3, col])
+                    if (GameBoard.Table[row, col] != "#" &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col])
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer);
+                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
                         return;
                     }
                 }
@@ -108,13 +160,13 @@ namespace Connect_Four
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    if (board[row, col] != ' ' &&
-                        board[row, col] == board[row + 1, col + 1] &&
-                        board[row, col] == board[row + 2, col + 2] &&
-                        board[row, col] == board[row + 3, col + 3])
+                    if (GameBoard.Table[row, col] != "#" &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col + 1] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col + 2] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col + 3])
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer);
+                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
                         return;
                     }
                 }
@@ -125,13 +177,13 @@ namespace Connect_Four
             {
                 for (int col = 3; col < 7; col++)
                 {
-                    if (board[row, col] != ' ' &&
-                        board[row, col] == board[row + 1, col - 1] &&
-                        board[row, col] == board[row + 2, col - 2] &&
-                        board[row, col] == board[row + 3, col - 3])
+                    if (GameBoard.Table[row, col] != "#" &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col - 1] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col - 2] &&
+                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col - 3])
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer);
+                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
                         return;
                     }
                 }
@@ -143,7 +195,7 @@ namespace Connect_Four
             {
                 for (int col = 0; col < 7; col++)
                 {
-                    if (board[row, col] == ' ')
+                    if (GameBoard.Table[row, col] == "#")
                     {
                         isBoardFull = false;
                         break;
@@ -157,10 +209,31 @@ namespace Connect_Four
                 Console.WriteLine("It's a draw!");
             }
         }
+    }
 
-        static void SwitchPlayer()
+
+    internal class program {  
+
+        static void Main()
         {
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            Controler GameControler= new Controler();
+            int GameTurn = 0;
+            Player currentPlayer = GameControler.players[GameTurn];
+
+            GameControler.GameBoard.InitializeBoard();
+
+
+            while (!GameControler.gameover)
+            {
+                GameControler.GameBoard.PrintBoard();
+                Console.WriteLine("Player {0}, choose a column (1-7):", currentPlayer.Name);
+                int column = int.Parse(Console.ReadLine()) - 1;
+                currentPlayer.MakeMove(column, GameControler.GameBoard);
+                GameControler.CheckWinCondition(currentPlayer);
+
+                GameTurn++;
+                currentPlayer = GameControler.players[GameTurn%2];
+            }
         }
     }
 
