@@ -55,28 +55,33 @@ namespace Connect_Four
                     Table[row, col] = "#";
                 }
             }
-        }
-
-
-        
+        } 
 
     }
 
-    internal class Player
+    internal abstract class PlayerBase
     {
         public string Name { get; set; }
         public string Symbol { get; set; }
 
-        public Player(string name, string symbol)
+        public PlayerBase(string name, string symbol)
         {
             Name = name;
             Symbol = symbol;
         }
 
+        public abstract void MakeMove(int column, Board board);
+    }
 
-        public void MakeMove(int column, Board board)
+    internal class Player : PlayerBase
+    {
+        public Player(string name, string symbol) : base(name, symbol)
         {
-            for (int row = board.Rows-1; row >= 0; row--)
+        }
+
+        public override void MakeMove(int column, Board board)
+        {
+            for (int row = board.Rows - 1; row >= 0; row--)
             {
                 if (board.Table[row, column] == "#")
                 {
@@ -117,6 +122,7 @@ namespace Connect_Four
             newPlayer = new Player(name, "O");
             players.Add(newPlayer);
         }
+
 
 
         public void CheckWinCondition(Player currentPlayer)
@@ -208,33 +214,63 @@ namespace Connect_Four
                 gameover = true;
                 Console.WriteLine("It's a draw!");
             }
+
+
+          
+
+
         }
+
+        public void RestartGame()
+        {
+            GameBoard.InitializeBoard();
+            gameover = false;
+        }
+
     }
 
 
-    internal class program {  
+    internal class program {
 
         static void Main()
         {
-            Controler GameControler= new Controler();
+            Controler GameControler = new Controler();
             int GameTurn = 0;
             Player currentPlayer = GameControler.players[GameTurn];
 
             GameControler.GameBoard.InitializeBoard();
 
-
-            while (!GameControler.gameover)
+            bool playAgain = true;
+            while (playAgain)
             {
-                GameControler.GameBoard.PrintBoard();
-                Console.WriteLine("Player {0}, choose a column (1-7):", currentPlayer.Name);
-                int column = int.Parse(Console.ReadLine()) - 1;
-                currentPlayer.MakeMove(column, GameControler.GameBoard);
-                GameControler.CheckWinCondition(currentPlayer);
+                while (!GameControler.gameover)
+                {
+                    Console.WriteLine("Player {0}, choose a column (1-7):", currentPlayer.Name);
+                    int column = int.Parse(Console.ReadLine()) - 1;
+                    currentPlayer.MakeMove(column, GameControler.GameBoard);
+                    GameControler.CheckWinCondition(currentPlayer);
+                    GameControler.GameBoard.PrintBoard();
 
-                GameTurn++;
-                currentPlayer = GameControler.players[GameTurn%2];
+                    GameTurn++;
+                    currentPlayer = GameControler.players[GameTurn % 2];
+                }
+
+                Console.WriteLine("Do you want to play again? (Y/N)");
+                string answer = Console.ReadLine();
+                if (answer.ToLower() == "y")
+                {
+                    GameControler.RestartGame
+();
+                    GameTurn = 0;
+                    currentPlayer = GameControler.players[GameTurn];
+                }
+                else
+                {
+                    playAgain = false;
+                }
             }
         }
+
     }
 
 }
