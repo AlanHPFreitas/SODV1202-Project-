@@ -6,13 +6,14 @@ using System.Xml.Linq;
 namespace Connect_Four
 {
 
-
     internal class Board
     {
         public int Rows { get; set; }
         public int Cols { get; set; }
         public string[,] Table { get; set; }
 
+        // Implemented constructer overloading
+        // The first one is parameterized constructor
         public Board(int rows, int cols)
         {
             Rows = rows;
@@ -20,6 +21,7 @@ namespace Connect_Four
             Table = new string[Rows, Cols];
         }
 
+        // Non parameterized constructor
         public Board()
         {
             Rows = 6;
@@ -30,7 +32,7 @@ namespace Connect_Four
 
         public void PrintBoard()
         {
-            Console.Clear();
+            
             Console.WriteLine("  1 2 3 4 5 6 7");
             for (int row = 0; row < Rows; row++)
             {
@@ -42,7 +44,7 @@ namespace Connect_Four
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine("---------------");
+            Console.WriteLine("---------------\n");
         }
 
 
@@ -58,24 +60,44 @@ namespace Connect_Four
         } 
 
     }
-
-    internal abstract class PlayerBase
+    //Implemented abstract class inheriting from interface
+    internal abstract class PlayerBase : IComparable<PlayerBase> 
     {
         public string Name { get; set; }
         public string Symbol { get; set; }
+
+        public int NumberOfWins { get; set; }
+
+        //Overriding method of interface
+        public  int CompareTo(PlayerBase obj)
+        {
+          if (NumberOfWins > obj.NumberOfWins)
+            {
+                return 1;
+
+            }
+           else if (NumberOfWins < obj.NumberOfWins)
+            {
+                return -1;
+
+            }
+          else { return 0; }
+        }
 
         public PlayerBase(string name, string symbol)
         {
             Name = name;
             Symbol = symbol;
+            NumberOfWins = 0;
         }
 
         public abstract void MakeMove(int column, Board board);
     }
 
-    internal class Player : PlayerBase
+    // HumanPlayer is a concrete class inheriting from PlayerBase abstract class
+    internal class HumanPlayer : PlayerBase
     {
-        public Player(string name, string symbol) : base(name, symbol)
+        public HumanPlayer (string name, string symbol) : base(name, symbol)
         {
         }
 
@@ -86,7 +108,7 @@ namespace Connect_Four
                 if (board.Table[row, column] == "#")
                 {
                     board.Table[row, column] = Symbol;
-                    return;
+                    break;
                 }
             }
         }
@@ -95,7 +117,7 @@ namespace Connect_Four
     internal class Controler
     {
         public Board GameBoard { get; set; }
-        public List<Player> players { get; set; }
+        public List<PlayerBase> Players { get; set; }
 
         public bool gameover;
 
@@ -103,7 +125,7 @@ namespace Connect_Four
         public Controler()
         {
             GameBoard = new Board();
-            players = new List<Player>(2);
+            Players = new List<PlayerBase>(2);
             gameover = false;
 
             AskForPlayers();
@@ -115,30 +137,32 @@ namespace Connect_Four
             string name;
             Console.WriteLine("Write player 1 name: ");
             name = Console.ReadLine();
-            var newPlayer = new Player(name, "X");
-            players.Add(newPlayer);
+            //Polymorphism with PlayerBase and HumanPlayer
+            PlayerBase newPlayer = new HumanPlayer(name, "X");
+            Players.Add(newPlayer);
             Console.WriteLine("Write player 2 name: ");
             name = Console.ReadLine();
-            newPlayer = new Player(name, "O");
-            players.Add(newPlayer);
+            newPlayer = new HumanPlayer(name, "O");
+            Players.Add(newPlayer);
         }
 
 
 
-        public void CheckWinCondition(Player currentPlayer)
+        public void CheckWinCondition(PlayerBase currentPlayer)
         {
             // Check horizontal
             for (int row = 0; row < 6; row++)
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    if (GameBoard.Table[row, col] != "#" &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 1] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 2] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row, col + 3])
+                    if (GameBoard.Table[row, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row, col + 1] == currentPlayer.Symbol &&
+                        GameBoard.Table[row, col + 2] == currentPlayer.Symbol &&
+                        GameBoard.Table[row, col + 3] == currentPlayer.Symbol)
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
+                        Console.WriteLine("\nPlayer {0} wins!\n", currentPlayer.Name);
+                        currentPlayer.NumberOfWins++;
                         return;
                     }
                 }
@@ -149,13 +173,14 @@ namespace Connect_Four
             {
                 for (int col = 0; col < 7; col++)
                 {
-                    if (GameBoard.Table[row, col] != "#" &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col])
+                    if (GameBoard.Table[row, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 1, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 2, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 3, col] == currentPlayer.Symbol)
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
+                        Console.WriteLine("\nPlayer {0} wins!\n", currentPlayer.Name);
+                        currentPlayer.NumberOfWins++;
                         return;
                     }
                 }
@@ -166,13 +191,14 @@ namespace Connect_Four
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    if (GameBoard.Table[row, col] != "#" &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col + 1] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col + 2] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col + 3])
+                    if (GameBoard.Table[row, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 1, col + 1] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 2, col + 2] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 3, col + 3] == currentPlayer.Symbol)
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
+                        Console.WriteLine("\nPlayer {0} wins!\n", currentPlayer.Name);
+                        currentPlayer.NumberOfWins++;
                         return;
                     }
                 }
@@ -183,13 +209,14 @@ namespace Connect_Four
             {
                 for (int col = 3; col < 7; col++)
                 {
-                    if (GameBoard.Table[row, col] != "#" &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 1, col - 1] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 2, col - 2] &&
-                        GameBoard.Table[row, col] == GameBoard.Table[row + 3, col - 3])
+                    if (GameBoard.Table[row, col] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 1, col - 1] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 2, col - 2] == currentPlayer.Symbol &&
+                        GameBoard.Table[row + 3, col - 3] == currentPlayer.Symbol)
                     {
                         gameover = true;
-                        Console.WriteLine("Player {0} wins!", currentPlayer.Name);
+                        Console.WriteLine("\nPlayer {0} wins!\n", currentPlayer.Name);
+                        currentPlayer.NumberOfWins++;
                         return;
                     }
                 }
@@ -212,12 +239,8 @@ namespace Connect_Four
             if (isBoardFull)
             {
                 gameover = true;
-                Console.WriteLine("It's a draw!");
+                Console.WriteLine("\nIt's a draw!\n");
             }
-
-
-          
-
 
         }
 
@@ -230,13 +253,13 @@ namespace Connect_Four
     }
 
 
-    internal class program {
+    internal class Program {
 
         static void Main()
         {
             Controler GameControler = new Controler();
             int GameTurn = 0;
-            Player currentPlayer = GameControler.players[GameTurn];
+            PlayerBase currentPlayer = GameControler.Players[GameTurn];
 
             GameControler.GameBoard.InitializeBoard();
 
@@ -252,7 +275,7 @@ namespace Connect_Four
                     GameControler.GameBoard.PrintBoard();
 
                     GameTurn++;
-                    currentPlayer = GameControler.players[GameTurn % 2];
+                    currentPlayer = GameControler.Players[GameTurn % 2];
                 }
 
                 Console.WriteLine("Do you want to play again? (Y/N)");
@@ -262,11 +285,23 @@ namespace Connect_Four
                     GameControler.RestartGame
 ();
                     GameTurn = 0;
-                    currentPlayer = GameControler.players[GameTurn];
+                    currentPlayer = GameControler.Players[GameTurn];
                 }
                 else
                 {
                     playAgain = false;
+                    if (GameControler.Players[0].CompareTo(GameControler.Players[1]) == 1)
+                    {
+                        Console.WriteLine($"Player {GameControler.Players[0].Name} won the game! Total wins: {GameControler.Players[0].NumberOfWins}");
+                    }
+                    else if (GameControler.Players[0].CompareTo(GameControler.Players[1]) == -1)
+                    {
+                        Console.WriteLine($"Player {GameControler.Players[1].Name} won the game! Total wins: {GameControler.Players[1].NumberOfWins}");
+                    }
+                    else 
+                    {
+                        Console.WriteLine("The game ended in a draw!");
+                    }
                 }
             }
         }
